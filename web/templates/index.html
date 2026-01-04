@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AutoDocker LLM</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #020617, #0f172a);
+      color: white;
+      text-align: center;
+    }
+
+    .card {
+      margin-top: 80px;
+      padding: 40px;
+      background: #1e293b;
+      border-radius: 14px;
+      width: 480px;
+      margin-left: auto;
+      margin-right: auto;
+      box-shadow: 0 25px 40px rgba(0,0,0,0.4);
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      background: #22c55e;
+      color: black;
+      font-size: 15px;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    button:hover {
+      background: #16a34a;
+    }
+
+    pre {
+      background: #020617;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: left;
+      overflow-x: auto;
+      margin-top: 15px;
+      font-size: 12px;
+    }
+
+    .stack {
+      margin-top: 15px;
+      font-weight: bold;
+      color: #38bdf8;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h1>🐳 AutoDocker LLM</h1>
+    <p>Upload project folder or ZIP → Get Dockerfile</p>
+
+    <form id="uploadForm">
+      <input type="file" name="project" webkitdirectory directory multiple>
+      <br><br>
+      <input type="file" name="project" accept=".zip">
+      <button type="submit">Generate Dockerfile</button>
+    </form>
+
+    <div id="result"></div>
+    <button id="buildBtn" style="display:none;">Build & Run Docker</button>
+  </div>
+
+<script>
+document.getElementById("uploadForm").onsubmit = async (e) => {
+  e.preventDefault();
+
+  const formData = new FormData(e.target);
+
+  const res = await fetch("/api/generate", {
+    method: "POST",
+    body: formData
+  });
+
+  const data = await res.json();
+
+  if (data.error) {
+    alert(data.error);
+    return;
+  }
+
+  document.getElementById("result").innerHTML = `
+    <div class="stack">Detected Stack: ${data.stack}</div>
+    <pre>${data.dockerfile}</pre>
+  `;
+
+  document.getElementById("buildBtn").style.display = "block";
+};
+
+document.getElementById("buildBtn").onclick = async () => {
+  const res = await fetch("/api/build", { method: "POST" });
+  const data = await res.json();
+
+  if (data.error) {
+    alert(data.error);
+  } else {
+    alert("Container running on port " + data.port);
+  }
+};
+</script>
+
+</body>
+</html>
+
